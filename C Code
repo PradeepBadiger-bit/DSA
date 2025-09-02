@@ -1,0 +1,151 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_URL_LEN 100
+
+// Node for each tab
+typedef struct Tab {
+    int pageID;
+    char url[MAX_URL_LEN];
+    struct Tab* prev;
+    struct Tab* next;
+} Tab;
+
+Tab* head = NULL;    // start of list
+Tab* current = NULL; // currently active tab
+int pageCounter = 1; // auto increment pageID
+
+// Function to create a new tab node
+Tab* createTab(const char* url) {
+    Tab* newTab = (Tab*)malloc(sizeof(Tab));
+    if (!newTab) {
+        printf("Memory allocation failed!\n");
+        exit(1);
+    }
+    newTab->pageID = pageCounter++;
+    strcpy(newTab->url, url);
+    newTab->prev = newTab->next = NULL;
+    return newTab;
+}
+
+// Visit a new page
+void visitPage() {
+    char url[MAX_URL_LEN];
+    printf("Enter URL: ");
+    scanf("%s", url);
+
+    Tab* newTab = createTab(url);
+
+    if (head == NULL) { // first tab
+        head = current = newTab;
+    } else {
+        current->next = newTab;
+        newTab->prev = current;
+        current = newTab;
+    }
+    printf("Opened new tab: [%d] %s\n", current->pageID, current->url);
+}
+
+// Move to next tab
+void nextTab() {
+    if (current && current->next) {
+        current = current->next;
+        printf("Moved to next tab: [%d] %s\n", current->pageID, current->url);
+    } else {
+        printf("No next tab available.\n");
+    }
+}
+
+// Move to previous tab
+void prevTab() {
+    if (current && current->prev) {
+        current = current->prev;
+        printf("Moved to previous tab: [%d] %s\n", current->pageID, current->url);
+    } else {
+        printf("No previous tab available.\n");
+    }
+}
+
+// Show current tab
+void showCurrent() {
+    if (current) {
+        printf("Current tab: [%d] %s\n", current->pageID, current->url);
+    } else {
+        printf("No tab open.\n");
+    }
+}
+
+// Close current tab
+void closeCurrent() {
+    if (!current) {
+        printf("No tab to close.\n");
+        return;
+    }
+
+    printf("Closing tab: [%d] %s\n", current->pageID, current->url);
+
+    Tab* temp = current;
+
+    if (current->prev)
+        current->prev->next = current->next;
+    else
+        head = current->next; // closing head tab
+
+    if (current->next)
+        current->next->prev = current->prev;
+
+    if (current->next)
+        current = current->next;
+    else
+        current = current->prev;
+
+    free(temp);
+
+    if (!current)
+        printf("All tabs closed.\n");
+    else
+        printf("Now at tab: [%d] %s\n", current->pageID, current->url);
+}
+
+// Show history (all tabs)
+void showHistory() {
+    if (!head) {
+        printf("No history available.\n");
+        return;
+    }
+    Tab* temp = head;
+    printf("Browser History:\n");
+    while (temp) {
+        printf("[%d] %s\n", temp->pageID, temp->url);
+        temp = temp->next;
+    }
+}
+
+int main() {
+    int choice;
+    while (1) {
+        printf("\n--- Browser Menu ---\n");
+        printf("1. Visit a new page\n");
+        printf("2. Go back (previous tab)\n");
+        printf("3. Go forward (next tab)\n");
+        printf("4. Show current tab\n");
+        printf("5. Close current tab\n");
+        printf("6. Show history\n");
+        printf("7. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1: visitPage(); break;
+            case 2: prevTab(); break;
+            case 3: nextTab(); break;
+            case 4: showCurrent(); break;
+            case 5: closeCurrent(); break;
+            case 6: showHistory(); break;
+            case 7: printf("Exiting...\n"); exit(0);
+            default: printf("Invalid choice! Try again.\n");
+        }
+    }
+    return 0;
+}
